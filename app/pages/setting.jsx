@@ -81,12 +81,16 @@ const SettingComponent = () => {
           setActiveConfigIndex(index);
         }
       });
-    } catch (err) {}
+    } catch (err) {
+      console.log(err);
+    }
   };
   useEffect(() => {
     fetchSettings();
-  }, [activeConfigIndex , ]);
-
+  }, [activeConfigIndex]);
+  useEffect(() => {
+    fetchSettings();
+  }, []);
   const saveConfig = async () => {
     if (configName.trim()) {
       const newConfig = {
@@ -137,7 +141,7 @@ const SettingComponent = () => {
     if (deleteResponse.code == "409") {
       Alert.alert(deleteResponse.message);
     }
-    fetchSettings()
+    fetchSettings();
   };
   const deleteConfig = async (index) => {
     Alert.alert(

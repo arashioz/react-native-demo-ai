@@ -28,12 +28,12 @@ const LoginScreen = () => {
   const router = useRouter();
   const opacity = useSharedValue(0);
   const scale = useSharedValue(1);
-  const {login } = useContext(AppContext)
+  const { login } = useContext(AppContext);
   const authenticateHandler = async () => {
-  let isAuth =   await login({username:email , password:password})
+    let isAuth = await login({ username: email, password: password });
+    console.log("🚀 ~ authenticateHandler ~ isAuth:", isAuth)
     if (isAuth) {
       Alert.alert("Login Successful", "Welcome back!", [{ text: "OK" }]);
-      await AsyncStorage.setItem("auth", JSON.stringify(true));
       return true;
     } else {
       Alert.alert("Login Failed", "Invalid email or password", [

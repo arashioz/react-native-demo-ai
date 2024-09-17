@@ -2,44 +2,55 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Alert } from "react-native";
+import { router } from "expo-router";
 
 export const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [backendURL, setBackendURL] = useState("http://192.168.0.167:3005");
+  const [backendURL, setBackendURL] = useState("http://192.168.0.166:3005");
   const [health, setHealth] = useState(null);
   const [anyData, setAnyData] = useState(null);
-  const api = axios.create({
-    baseURL: backendURL,
-    timeout: 10000,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
   useEffect(() => {
     const loadToken = async () => {
-      const savedToken = await AsyncStorage.getItem("auth");
-      if (savedToken) {
-        setToken(savedToken);
-        api.defaults.headers.Authorization = `Bearer ${savedToken}`;
+      try {
+        const savedToken = await AsyncStorage.getItem("auth");
+        console.log("🚀 ~ loadToken ~ savedToken:", savedToken)
+        if (savedToken !== null) {
+          setToken(savedToken);
+        } else {
+          router.push("pages/login");
+        }
+      } catch (error) {
+        console.log("Error retrieving token:", error);
       }
+
+
       setLoading(false);
     };
     loadToken();
     checkAPIHealth();
   }, []);
 
+  const api = axios.create({
+    baseURL: backendURL,
+    timeout: 10000,
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization" :`Bearer ${JSON.parse(token)}`
+    },
+  });
+
+
   const login = async (credentials) => {
     try {
       const response = await api.post("/auth/login", credentials);
       const authToken = response.data.access_token;
       setToken(authToken);
+      console.log();
       api.defaults.headers.Authorization = `Bearer ${authToken}`;
-      await AsyncStorage.setItem("authToken", authToken);
+      await AsyncStorage.setItem("auth", JSON.stringify(authToken));
       return true;
     } catch (error) {
       console.error("Login error:", error);
@@ -55,6 +66,7 @@ export const AppProvider = ({ children }) => {
 
   const fetchData = async (endpoint) => {
     try {
+      console.log(api.defaults)
       const response = await api.get(endpoint);
       return response.data;
     } catch (error) {
@@ -74,7 +86,7 @@ export const AppProvider = ({ children }) => {
       });
       return response.data;
     } catch (error) {
-      console.error("API call error:", error);
+      console.error("API call error:", error.message);
       if (error) {
         Alert.alert("application have err ", "reload", [
           {

@@ -3,12 +3,12 @@ import { View, Image, Dimensions } from "react-native";
 import Svg, { Polygon } from "react-native-svg";
 import { AppContext } from "../../context/AppContext";
 
-const ImageWithOverlay = ({ data }) => {
+const ImageWithOverlay = ({ data , imageURI }) => {
   const { anyData } = useContext(AppContext);
   const [imageSize, setImageSize] = useState({ width: 1, height: 1 });
   const [scaledPolygons, setScaledPolygons] = useState([]);
-
-  // Array of colors for the polygons
+  const [filterData , setFilterData] =  useState([])
+  console.log(imageURI)
   const colors = [
     "rgba(255, 0, 0, 0.5)",
     "rgba(0, 255, 0, 0.5)",
@@ -23,16 +23,18 @@ const ImageWithOverlay = ({ data }) => {
   useEffect(() => {
     if (anyData) {
       // Fetch the natural dimensions of the image
-      Image.getSize(anyData, (width, height) => {
+      Image.getSize(imageURI.imageUrl, (width, height) => {
         setImageSize({ width, height });
       });
     }
-  }, [anyData]);
+  let filterIndex =   data.reports.filter(imageIndex => imageIndex.image_index === anyData.imageIndex)
+  setFilterData([ filterIndex , ...filterData])
+
+}, [ anyData.imageIndex]);
 
   // Function to calculate scaled points for the polygons based on the image and screen size
   const getPolygonPoints = (part_segments) => {
     if (!part_segments || !part_segments.x || !part_segments.y) return "";
-
     const widthRatio = screenWidth / imageSize.width;
     const heightRatio = (screenHeight * 0.4) / imageSize.height; // For 40% height
 
@@ -43,6 +45,7 @@ const ImageWithOverlay = ({ data }) => {
         return `${scaledX},${scaledY}`;
       })
       .join(" ");
+
   };
 
   return (
@@ -50,7 +53,7 @@ const ImageWithOverlay = ({ data }) => {
       <View style={{ width: screenWidth, height: screenHeight * 0.4 }}>
         {/* Image with scaling to 100% width and 40% height */}
         <Image
-          source={{ uri: anyData }}
+          source={{ uri: imageURI.imageUrl }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="stretch"
         />
@@ -66,7 +69,7 @@ const ImageWithOverlay = ({ data }) => {
           }}
           viewBox={`0 0 ${screenWidth} ${screenHeight * 0.4}`}
         >
-          {data.reports.map((part, index) => (
+          {data.reports.filter( imageIndex => imageIndex.image_index === imageURI.imageIndex).map((part, index) => (
             <Polygon
               key={index}
               points={getPolygonPoints(part.part_segments)}
